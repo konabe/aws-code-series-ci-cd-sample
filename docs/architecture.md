@@ -3,12 +3,21 @@
 ## 設計方針メモ
 
 - **AI レビュアー**: Kiro CLI を CodeBuild 上で実行し、PR コメントを CodeCommit に投稿
-- **人間レビュー**: CodePipeline の Manual Approval ステージで強制 (どんな PR でも必須)
+- **人間レビュー**: CodeCommit の Approval Rule Template (`todo-api-require-human-approver`) で
+  「マージに 1 人以上の承認が必要」を強制 (どんな PR でも必須)
 - **メトリクス保存**:
   - 生イベント → DynamoDB (`code-review-pr-events`)
     - `pk = PR#<repo>#<prId>` / `sk = <ISO timestamp>#<event>`
   - 集計値 → CloudWatch Custom Metrics (`CodeReviewOpt` namespace)
 - **可視化**: CloudWatch Dashboard `code-review-optimization`
+
+## トリガ構成
+
+| 発火元 | 経路 | 動作 |
+| --- | --- | --- |
+| PR 作成 / source ブランチ更新 | EventBridge → AI レビュー CodeBuild | Kiro 実行 → PR にコメント → メトリクス記録 |
+| main ブランチへの push | CodePipeline | Source → Build → (デプロイは TODO API 実装後に追加) |
+| あらゆる PR | CodeCommit Approval Rule | 人間 1 名以上の承認なしにマージ不可 |
 
 ## 想定する PR ライフサイクルとイベント
 

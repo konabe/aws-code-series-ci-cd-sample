@@ -3,6 +3,7 @@ import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { SourceStack } from '../lib/source-stack';
 import { MetricsStack } from '../lib/metrics-stack';
+import { PipelineStack } from '../lib/pipeline-stack';
 
 const app = new cdk.App();
 
@@ -13,7 +14,13 @@ const env = {
 
 const source = new SourceStack(app, 'CodeReviewOpt-Source', { env });
 
-new MetricsStack(app, 'CodeReviewOpt-Metrics', {
+const metrics = new MetricsStack(app, 'CodeReviewOpt-Metrics', {
   env,
   repositoryName: source.repository.repositoryName,
+});
+
+new PipelineStack(app, 'CodeReviewOpt-Pipeline', {
+  env,
+  repository: source.repository,
+  eventsTable: metrics.eventsTable,
 });
