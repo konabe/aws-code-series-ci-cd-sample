@@ -1,0 +1,27 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript build artifacts
+*.js
+*.d.ts
+*.js.map
+!jest.config.js
+
+# CDK
+cdk.out/
+cdk.context.json
+.cdk.staging/
+
+# Env / secrets
+.env
+.env.local
+*.pem
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
