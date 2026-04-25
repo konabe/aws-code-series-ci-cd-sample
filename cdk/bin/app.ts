@@ -16,7 +16,7 @@ const source = new SourceStack(app, 'CodeReviewOpt-Source', { env });
 
 const metrics = new MetricsStack(app, 'CodeReviewOpt-Metrics', {
   env,
-  repositoryName: source.repository.repositoryName,
+  repository: source.repository,
 });
 
 new PipelineStack(app, 'CodeReviewOpt-Pipeline', {
