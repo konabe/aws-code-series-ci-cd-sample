@@ -179,10 +179,9 @@ export class PipelineStack extends cdk.Stack {
               // On success, satisfy the "todo-api-require-test-pass" approval rule
               // by APPROVing the current revision. On failure, do nothing — the
               // missing approval blocks the merge until the next push re-runs us.
-              'if [ "$STATUS_VALUE" = "1" ]; then',
-              '  REVISION_ID=$(aws codecommit get-pull-request --pull-request-id "$PR_ID" --query "pullRequest.revisionId" --output text)',
-              '  aws codecommit update-pull-request-approval-state --pull-request-id "$PR_ID" --revision-id "$REVISION_ID" --approval-state APPROVE || true',
-              'fi',
+              // Must be one entry: CodeBuild runs each `commands` element as a
+              // separate shell, so a multi-line `if ... fi` would be a parse error.
+              'if [ "$STATUS_VALUE" = "1" ]; then REVISION_ID=$(aws codecommit get-pull-request --pull-request-id "$PR_ID" --query "pullRequest.revisionId" --output text); aws codecommit update-pull-request-approval-state --pull-request-id "$PR_ID" --revision-id "$REVISION_ID" --approval-state APPROVE || true; fi',
             ],
           },
         },
