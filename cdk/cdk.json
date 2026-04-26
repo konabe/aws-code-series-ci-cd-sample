@@ -15,6 +15,7 @@
     ]
   },
   "context": {
+    "github:existingProviderArn": "arn:aws:iam::462749389129:oidc-provider/token.actions.githubusercontent.com",
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": ["aws", "aws-cn"],

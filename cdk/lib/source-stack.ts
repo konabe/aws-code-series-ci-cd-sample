@@ -35,7 +35,9 @@ export class SourceStack extends cdk.Stack {
         {
           Type: 'Approvers',
           NumberOfApprovalsNeeded: 1,
-          ApprovalPoolMembers: ['arn:aws:sts::*:assumed-role/*/*'],
+          ApprovalPoolMembers: [
+            `arn:aws:sts::${cdk.Stack.of(this).account}:assumed-role/*/*`,
+          ],
         },
       ],
     });
