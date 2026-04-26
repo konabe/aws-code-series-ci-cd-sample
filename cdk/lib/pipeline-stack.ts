@@ -264,9 +264,16 @@ export class PipelineStack extends cdk.Stack {
         action: 'deleteApprovalRuleTemplate',
         parameters: { approvalRuleTemplateName: templateName },
       },
-      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
-        resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE,
-      }),
+      policy: cr.AwsCustomResourcePolicy.fromStatements([
+        new iam.PolicyStatement({
+          actions: [
+            'codecommit:CreateApprovalRuleTemplate',
+            'codecommit:UpdateApprovalRuleTemplateContent',
+            'codecommit:DeleteApprovalRuleTemplate',
+          ],
+          resources: ['*'],
+        }),
+      ]),
     });
 
     const associate = new cr.AwsCustomResource(this, 'AssociateTestApprovalRuleTemplate', {
@@ -287,9 +294,15 @@ export class PipelineStack extends cdk.Stack {
           repositoryName: repository.repositoryName,
         },
       },
-      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
-        resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE,
-      }),
+      policy: cr.AwsCustomResourcePolicy.fromStatements([
+        new iam.PolicyStatement({
+          actions: [
+            'codecommit:AssociateApprovalRuleTemplateWithRepository',
+            'codecommit:DisassociateApprovalRuleTemplateFromRepository',
+          ],
+          resources: [repository.repositoryArn],
+        }),
+      ]),
     });
 
     associate.node.addDependency(createTemplate);
