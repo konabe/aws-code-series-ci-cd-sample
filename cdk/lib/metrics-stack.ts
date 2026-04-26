@@ -46,10 +46,13 @@ export class MetricsStack extends cdk.Stack {
   }
 
   private createCollector(repository: codecommit.IRepository): lambda.IFunction {
+    const collectorRoot = path.join(__dirname, '..', '..', 'metrics-collector');
     const fn = new nodejs.NodejsFunction(this, 'CollectorFunction', {
       functionName: 'code-review-metrics-collector',
       runtime: lambda.Runtime.NODEJS_20_X,
-      entry: path.join(__dirname, '..', '..', 'metrics-collector', 'src', 'index.ts'),
+      entry: path.join(collectorRoot, 'src', 'index.ts'),
+      projectRoot: collectorRoot,
+      depsLockFilePath: path.join(collectorRoot, 'package-lock.json'),
       handler: 'handler',
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,

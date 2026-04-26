@@ -1,0 +1,53 @@
+name: Deploy CDK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: cdk-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: cdk deploy --all
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      AWS_REGION: ap-northeast-1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install metrics-collector dependencies
+        working-directory: metrics-collector
+        run: npm install --no-audit --no-fund
+
+      - name: Install CDK dependencies
+        working-directory: cdk
+        run: npm install --no-audit --no-fund
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: CDK synth
+        working-directory: cdk
+        run: npx cdk synth
+
+      - name: CDK deploy
+        working-directory: cdk
+        run: npx cdk deploy --all --require-approval never --concurrency 2
