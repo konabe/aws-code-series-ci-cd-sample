@@ -90,7 +90,11 @@ export class PipelineStack extends cdk.Stack {
               // context window and CodeBuild stdout limits.
               'head -c 200000 /tmp/pr.diff > /tmp/pr.diff.trimmed',
               'PROMPT="あなたはシニアコードレビュアーです。次の git diff を読み、バグ・セキュリティ・保守性・テスト不足の観点から Markdown 箇条書きで簡潔に指摘してください。問題が無ければ「特に指摘なし」と返してください。差分:\\n\\n$(cat /tmp/pr.diff.trimmed)"',
-              'REVIEW=$(printf "%s" "$PROMPT" | claude -p --bare --dangerously-skip-permissions --no-session-persistence --max-turns 1 --model "$ANTHROPIC_MODEL" 2>&1 || echo "(Claude Code invocation failed; see CodeBuild logs.)")',
+              // `--disallowedTools "*"` strips every tool from Claude's context,
+              // so the permission system never triggers — required because
+              // `--dangerously-skip-permissions` is rejected when running as
+              // root, which CodeBuild containers always do.
+              'REVIEW=$(printf "%s" "$PROMPT" | claude -p --bare --disallowedTools "*" --no-session-persistence --max-turns 1 --model "$ANTHROPIC_MODEL" 2>&1 || echo "(Claude Code invocation failed; see CodeBuild logs.)")',
               'printf "### AI Review (Claude Code via Bedrock: %s)\\n\\n%s\\n" "$ANTHROPIC_MODEL" "$REVIEW" > /tmp/review.md',
               'aws codecommit post-comment-for-pull-request --pull-request-id "$PR_ID" --repository-name "$REPOSITORY_NAME" --before-commit-id "$DEST_COMMIT" --after-commit-id "$SOURCE_COMMIT" --content file:///tmp/review.md || true',
             ],
