@@ -36,9 +36,11 @@ export class PipelineStack extends cdk.Stack {
   }
 
   private createAiReviewProject(props: PipelineStackProps): codebuild.Project {
+    // Claude Sonnet 4.5 has no APAC inference profile yet; Sonnet 4.0 does.
+    // Override via `-c aiReview:bedrockModelId=...` once a newer profile lands.
     const bedrockModelId =
       this.node.tryGetContext('aiReview:bedrockModelId') ??
-      'apac.anthropic.claude-sonnet-4-5-20250929-v1:0';
+      'apac.anthropic.claude-sonnet-4-20250514-v1:0';
 
     const project = new codebuild.Project(this, 'AiReviewProject', {
       projectName: 'todo-api-ai-review',
