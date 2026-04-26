@@ -171,10 +171,7 @@ export class PipelineStack extends cdk.Stack {
         phases: {
           install: {
             'runtime-versions': { nodejs: '20' },
-            commands: [
-              'echo "[install] npm ci (placeholder until todo-api lands)"',
-              '# npm ci',
-            ],
+            commands: ['npm ci'],
           },
           pre_build: {
             commands: [
@@ -184,10 +181,7 @@ export class PipelineStack extends cdk.Stack {
             ],
           },
           build: {
-            commands: [
-              'echo "[build] Run tests (placeholder)"',
-              '# npm test',
-            ],
+            commands: ['npm test'],
           },
           post_build: {
             commands: [
