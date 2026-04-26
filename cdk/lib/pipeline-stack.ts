@@ -36,9 +36,13 @@ export class PipelineStack extends cdk.Stack {
   }
 
   private createAiReviewProject(props: PipelineStackProps): codebuild.Project {
+    const bedrockModelId =
+      this.node.tryGetContext('aiReview:bedrockModelId') ??
+      'apac.anthropic.claude-sonnet-4-5-20250929-v1:0';
+
     const project = new codebuild.Project(this, 'AiReviewProject', {
       projectName: 'todo-api-ai-review',
-      description: 'Run Kiro CLI on a PR and post review comments. Records review metrics.',
+      description: 'Run Claude Code (via Amazon Bedrock) on a PR and post a review comment. Records review metrics.',
       source: codebuild.Source.codeCommit({ repository: props.repository }),
       environment: {
         buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
@@ -48,32 +52,47 @@ export class PipelineStack extends cdk.Stack {
         EVENTS_TABLE: { value: props.eventsTable.tableName },
         METRICS_NAMESPACE: { value: METRICS_NAMESPACE },
         REPOSITORY_NAME: { value: props.repository.repositoryName },
+        // Tells Claude Code to authenticate via Bedrock instead of an Anthropic API key.
+        CLAUDE_CODE_USE_BEDROCK: { value: '1' },
+        ANTHROPIC_MODEL: { value: bedrockModelId },
+        AWS_REGION: { value: this.region },
       },
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
-        env: {
-          shell: 'bash',
-        },
+        env: { shell: 'bash' },
         phases: {
           install: {
             'runtime-versions': { nodejs: '20' },
             commands: [
-              'echo "[install] Kiro CLI installation goes here (placeholder)"',
-              '# npm install -g @aws/kiro-cli  # adjust to actual package',
+              'curl -fsSL https://claude.ai/install.sh | bash',
+              'export PATH="$HOME/.local/bin:$PATH"',
+              'claude --version',
             ],
           },
           pre_build: {
             commands: [
+              'export PATH="$HOME/.local/bin:$PATH"',
               'export REVIEW_START_TS=$(date -u +%s)',
               'echo "[pre_build] PR_ID=${PR_ID:-unknown} SOURCE_COMMIT=${SOURCE_COMMIT:-unknown} DEST_COMMIT=${DEST_COMMIT:-unknown}"',
               'aws dynamodb put-item --table-name "$EVENTS_TABLE" --item "{\\"pk\\":{\\"S\\":\\"PR#${REPOSITORY_NAME}#${PR_ID}\\"},\\"sk\\":{\\"S\\":\\"$(date -u +%FT%TZ)#aiReviewStarted\\"},\\"event\\":{\\"S\\":\\"aiReviewStarted\\"}}" || true',
+              // CodeBuild only checks out the source commit; we need the destination
+              // ref locally to compute the diff Claude will review.
+              'git fetch origin "$DEST_COMMIT" || git fetch origin "+refs/heads/main:refs/remotes/origin/main" || true',
             ],
           },
           build: {
             commands: [
-              'echo "[build] Run Kiro review (placeholder)"',
-              '# kiro review --pr "$PR_ID" --output kiro-output.json',
-              '# parse findings + post comments via aws codecommit post-comment-for-pull-request',
+              'export PATH="$HOME/.local/bin:$PATH"',
+              'git diff "$DEST_COMMIT" "$SOURCE_COMMIT" > /tmp/pr.diff || true',
+              'DIFF_BYTES=$(wc -c < /tmp/pr.diff)',
+              'echo "[build] diff size: ${DIFF_BYTES} bytes"',
+              // Cap the diff fed to Claude at ~200 KB to stay well below the model
+              // context window and CodeBuild stdout limits.
+              'head -c 200000 /tmp/pr.diff > /tmp/pr.diff.trimmed',
+              'PROMPT="あなたはシニアコードレビュアーです。次の git diff を読み、バグ・セキュリティ・保守性・テスト不足の観点から Markdown 箇条書きで簡潔に指摘してください。問題が無ければ「特に指摘なし」と返してください。差分:\\n\\n$(cat /tmp/pr.diff.trimmed)"',
+              'REVIEW=$(printf "%s" "$PROMPT" | claude -p --bare --dangerously-skip-permissions --no-session-persistence --max-turns 1 --model "$ANTHROPIC_MODEL" 2>&1 || echo "(Claude Code invocation failed; see CodeBuild logs.)")',
+              'printf "### AI Review (Claude Code via Bedrock: %s)\\n\\n%s\\n" "$ANTHROPIC_MODEL" "$REVIEW" > /tmp/review.md',
+              'aws codecommit post-comment-for-pull-request --pull-request-id "$PR_ID" --repository-name "$REPOSITORY_NAME" --before-commit-id "$DEST_COMMIT" --after-commit-id "$SOURCE_COMMIT" --content file:///tmp/review.md || true',
             ],
           },
           post_build: {
