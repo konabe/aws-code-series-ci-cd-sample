@@ -60,7 +60,20 @@ CodeCommit (各種イベント)
 | --- | --- |
 | `cdk/` | AWS 基盤 (CodeCommit / DynamoDB / Dashboard / CodePipeline) を CDK で定義 |
 | `metrics-collector/` | CodeCommit のイベントを受けて DynamoDB / CloudWatch に書き込む Lambda |
+| `.config/` | リポジトリ共通の rc 系設定 (ESLint / Prettier / EditorConfig / nvmrc) |
 | `docs/` | 設計メモ |
+
+## Lint / Format
+
+ESLint と Prettier の設定は `.config/` に集約されており、各サブプロジェクトの
+`package.json` から相対パスで参照しています。初回は `.config/` で `npm install`
+してください。
+
+```bash
+cd .config && npm install
+cd ../cdk && npm run lint && npm run format:check
+cd ../metrics-collector && npm run lint && npm run format:check
+```
 
 ## セットアップ (作業中)
 

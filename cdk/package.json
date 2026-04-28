@@ -10,7 +10,11 @@
     "watch": "tsc -w",
     "synth": "cdk synth",
     "diff": "cdk diff",
-    "deploy": "cdk deploy"
+    "deploy": "cdk deploy",
+    "lint": "../.config/node_modules/.bin/eslint --config ../.config/eslint.config.mjs bin lib",
+    "lint:fix": "../.config/node_modules/.bin/eslint --config ../.config/eslint.config.mjs --fix bin lib",
+    "format": "../.config/node_modules/.bin/prettier --config ../.config/.prettierrc.json --ignore-path ../.config/.prettierignore --write \"{bin,lib}/**/*.ts\"",
+    "format:check": "../.config/node_modules/.bin/prettier --config ../.config/.prettierrc.json --ignore-path ../.config/.prettierignore --check \"{bin,lib}/**/*.ts\""
   },
   "devDependencies": {
     "@types/node": "^22.7.5",

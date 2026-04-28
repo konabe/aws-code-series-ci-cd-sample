@@ -5,7 +5,11 @@
   "description": "Lambda that consumes CodeCommit EventBridge events and emits review metrics.",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsc --noEmit"
+    "build": "tsc --noEmit",
+    "lint": "../.config/node_modules/.bin/eslint --config ../.config/eslint.config.mjs src",
+    "lint:fix": "../.config/node_modules/.bin/eslint --config ../.config/eslint.config.mjs --fix src",
+    "format": "../.config/node_modules/.bin/prettier --config ../.config/.prettierrc.json --ignore-path ../.config/.prettierignore --write \"src/**/*.ts\"",
+    "format:check": "../.config/node_modules/.bin/prettier --config ../.config/.prettierrc.json --ignore-path ../.config/.prettierignore --check \"src/**/*.ts\""
   },
   "devDependencies": {
     "@aws-sdk/client-cloudwatch": "^3.700.0",
