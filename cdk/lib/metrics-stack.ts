@@ -49,7 +49,7 @@ export class MetricsStack extends cdk.Stack {
     const collectorRoot = path.join(__dirname, '..', '..', 'metrics-collector');
     const fn = new nodejs.NodejsFunction(this, 'CollectorFunction', {
       functionName: 'code-review-metrics-collector',
-      runtime: lambda.Runtime.NODEJS_22_X,
+      runtime: lambda.Runtime.NODEJS_24_X,
       entry: path.join(collectorRoot, 'src', 'index.ts'),
       projectRoot: collectorRoot,
       depsLockFilePath: path.join(collectorRoot, 'package-lock.json'),
@@ -58,7 +58,7 @@ export class MetricsStack extends cdk.Stack {
       memorySize: 256,
       logRetention: logs.RetentionDays.ONE_MONTH,
       bundling: {
-        target: 'node22',
+        target: 'node24',
         minify: false,
         sourceMap: true,
         externalModules: ['@aws-sdk/*'],
