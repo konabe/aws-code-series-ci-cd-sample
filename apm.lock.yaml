@@ -1,0 +1,13 @@
+lockfile_version: '1'
+generated_at: '2026-05-02T01:44:51.957526+00:00'
+apm_version: 0.11.0
+dependencies:
+- repo_url: vercel-labs/agent-skills
+  host: github.com
+  resolved_commit: ce3e64e468f8fa09a2d075d102771838061fdac0
+  package_type: skill_bundle
+  deployed_files:
+  - .claude/skills/web-design-guidelines
+  content_hash: sha256:5dd20e239a6a323bc0ce5b8190ec67e06240fd214ac96332322fd50f52f2ce68
+  skill_subset:
+  - web-design-guidelines

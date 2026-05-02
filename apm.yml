@@ -1,0 +1,12 @@
+name: aws-code-series-ci-cd-sample
+version: 1.0.0
+description: APM project for aws-code-series-ci-cd-sample
+author: Claude
+dependencies:
+  apm:
+    - git: vercel-labs/agent-skills
+      skills:
+        - web-design-guidelines
+  mcp: []
+includes: auto
+scripts: {}

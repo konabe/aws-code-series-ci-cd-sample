@@ -25,3 +25,7 @@ cdk.context.json
 .idea/
 .vscode/
 *.swp
+
+
+# APM dependencies
+apm_modules/
